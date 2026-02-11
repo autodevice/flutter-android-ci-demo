@@ -1,0 +1,31 @@
+name: Build & Upload to AutoDevice
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.27.4'
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build APK
+        run: flutter build apk --debug
+
+      - name: Upload to AutoDevice
+        run: |
+          curl -X POST "https://api.autodevice.io/v1/builds" \
+            -H "Authorization: Bearer ${{ secrets.AUTODEVICE_API_KEY }}" \
+            -F "file=@build/app/outputs/flutter-apk/app-debug.apk" \
+            -F "platform=android"
